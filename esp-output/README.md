@@ -10,6 +10,14 @@ This sketch requires the ESP8266 board to be installed from Tools->Board->Boards
 
 The above diagram is valid whenever the esp-output board is not powered from the main 12V input. Otherwise, remove the Vcc connection between USB converter and relay board.
 
+Like any other ESP8266 board, esp-output needs the following sequence of RESET-GPIO0 button presses in orde rto put the board in programing mode:
+
+1. Press and hold GPIO0
+2. Press and release RESET
+3. Release GPIO0
+
+Quite simple, isn't it? Hehe... Well we messed up with the silkscreened labels on the current version (1.0) so the switch named as "RESET" is "GPIO0" in fact and the opposite. We will fix this mistake in the next revision.
+
 ## Customization
 
 This board needs to be attached to a WiFi network so either the WiFi SSID and password needs to be entered into userdata.h before compiling the application.
