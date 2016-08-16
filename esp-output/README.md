@@ -1,6 +1,6 @@
 ![Programming pinout](http://panstamp.org/pictures/esp-output_01.jpg)
 
-esp-output is designed and manufactured by [panStamp](http://www.panstamp.com) based on the popular ESP8266 WiFi IC, to create a simple but powerful device with six relay outputs and a WiFi interface. This device is controllable via MQTT and HTTP by means of a very simple packet structure. This board is programmable from the Arduino IDE
+esp-output is designed and manufactured by [panStamp](http://www.panstamp.com) based on the popular ESP8266 WiFi IC to create a simple but powerful device with six relay outputs and a WiFi interface. This device is controllable via MQTT and HTTP by means of a very simple packet structure. This board is programmable from the Arduino IDE.
 
 # Arduino IDE
 
@@ -16,7 +16,7 @@ Like any other ESP8266 board, esp-output needs the following sequence of RESET-G
 2. Press and release RESET
 3. Release GPIO0
 
-Quite simple, isn't it? Hehe... Well we messed up with the silkscreened labels on the current version (1.0) so the switch named as "RESET" is "GPIO0" in fact and the opposite. We will fix this mistake in the next revision.
+Quite simple, isn't it? Hehe... Well we messed up with the silkscreened labels on the current version (1.0) so the switch named as "RESET" is "GPIO0" in fact and the opposite. We will fix this mistake in the next revision so please keep this in mind.
 
 ## Customization
 
