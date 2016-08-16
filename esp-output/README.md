@@ -1,6 +1,6 @@
 ![Programming pinout](http://panstamp.org/pictures/esp-output_01.jpg)
 
-esp-output is designed and manufactured by (panStamp)[http://www.panstamp.com] based on the popular ESP8266 WiFi IC, to create a simple but powerful device with six relay outputs and a WiFi interface. This device is controllable via MQTT and HTTP by means of a very simple packet structure. This board is programmable from the Arduino IDE
+esp-output is designed and manufactured by [panStamp](http://www.panstamp.com) based on the popular ESP8266 WiFi IC, to create a simple but powerful device with six relay outputs and a WiFi interface. This device is controllable via MQTT and HTTP by means of a very simple packet structure. This board is programmable from the Arduino IDE
 
 # Arduino IDE
 
@@ -111,5 +111,5 @@ Where 192.168.1.68 is the IP address of the esp-control board in this case. Sinc
 
 ## Technical support
 
-(panStamp forum)[http://www.panstamp.org/forum/forumdisplay.php?fid=26]
+[panStamp forum](http://www.panstamp.org/forum/forumdisplay.php?fid=26)
 
