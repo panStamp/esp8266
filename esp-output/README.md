@@ -113,3 +113,7 @@ Where 192.168.1.68 is the IP address of the esp-control board in this case. Sinc
 
 [panStamp forum](http://www.panstamp.org/forum/forumdisplay.php?fid=26)
 
+## How to buy esp-output
+
+esp-output can be purchased from the official [panStamp store](http://panstamp.com/store/index.php?id_product=84&controller=product)
+
