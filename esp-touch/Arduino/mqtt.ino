@@ -107,13 +107,13 @@ float getHumidity(void)
  */
 void mqttPubButton( uint8_t numberButton, uint8_t touch)
 {
-  char tpc[32];
+  char tpc[64];
   char msg[4] = "ON";
   if (touch == 0)
   {
     strcpy(msg,"OFF");
   }
-  sprintf(tpc, "%s%s%d", MQTT_TOPIC_MAIN, "/button",numberButton); 
+  sprintf(tpc, "/%s/esp-touch/%s/button/%d", MQTT_TOPIC_MAIN, deviceKey, numberButton); 
   client.publish(tpc, msg);
 
 }
@@ -124,8 +124,8 @@ void mqttPubButton( uint8_t numberButton, uint8_t touch)
  */
 void mqttPubTemp(void)
 {
-  char tpc[32];
-  sprintf(tpc, "%s%s", MQTT_TOPIC_MAIN, "/temperature");
+  char tpc[64];
+  sprintf(tpc, "/%s/esp-touch/%s/temperature", MQTT_TOPIC_MAIN, deviceKey);
   
   int n1 = int(temperature);
   int n2 = (temperature - n1) * 100;
@@ -142,8 +142,8 @@ void mqttPubTemp(void)
  */
 void mqttPubHum(void)
 {
-  char tpc[32];
-  sprintf(tpc, "%s%s", MQTT_TOPIC_MAIN, "/humidity");
+  char tpc[64];
+  sprintf(tpc, "/%s/esp-touch/%s/humidity", MQTT_TOPIC_MAIN, deviceKey);
   
   int n1 = int(humidity);
   int n2 = (humidity - n1) * 100;

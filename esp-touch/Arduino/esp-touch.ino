@@ -36,6 +36,11 @@ Adafruit_MPR121 touch = Adafruit_MPR121();
 
 WiFiClient espClient;
 
+
+char deviceId[64];
+// Unique device key based on MAC
+char deviceKey[WL_MAC_ADDR_LENGTH * 2 + 1]; 
+
 /* 
  * Variables to control which button has been pressed and released 
  */
@@ -45,7 +50,7 @@ uint16_t oldTouched = 0;
 /*
  * Variable temperature and humidity
  */
- float humidity, temperature;
+float humidity, temperature;
  
 /* 
  * Variables to control the time interval for reporting temperature and humidity 
@@ -59,23 +64,47 @@ void setup()
   Serial.begin(38400);
   pinMode(LED, OUTPUT);
   digitalWrite(LED, HIGH);
+
+  // Append last two bytes of the MAC to the device ID
+  uint8_t mac[WL_MAC_ADDR_LENGTH];
+  WiFi.softAPmacAddress(mac);
+
+  char buf[3];
+  // Set Device key from MAC address
+  memset((uint8_t*)deviceKey, 0, sizeof(deviceKey));
+  for(int i=0; i<WL_MAC_ADDR_LENGTH ; i++)
+  {
+    if (mac[i] < 0x10)
+      sprintf(buf, "0%X", mac[i]);
+    else
+      sprintf(buf, "%X", mac[i]);
+
+    deviceKey[i*2] = buf[0];
+    deviceKey[i*2+1] = buf[1];
+  }
+
+  // Set device ID
+  sprintf(deviceId, "%s %s", description, deviceKey);
   
-  if (!touch.begin(0x5A)) { // Initialize MPR121 capacitive sensor
+  // Initialize MPR121 capacitive sensor
+  if (!touch.begin(0x5A)) {
     Serial.println("MPR121 not found, check wiring?");
     while (1);
   }
   Serial.println("MPR121 found!");
 
-  Serial.println(description);
-  WiFi.begin(ssid, password);  // We connect to wifi 
+  // We connect to wifi   
+  WiFi.begin(ssid, password); 
   while (WiFi.status() != WL_CONNECTED) 
   {  
     delay(500);
     Serial.print(".");
     initWebServer();     
   }
+  
   Serial.println("");
-  Serial.println("esp-io Web Server");
+  Serial.println(deviceId);
+  Serial.println("esp-touch Web Server");
   Serial.print("Connected to ");
   Serial.println(ssid);
   Serial.print("IP address: ");
@@ -83,7 +112,8 @@ void setup()
 
   miHumidity();
 
-  mqttConnect(); // We connect mqtt
+  // We connect mqtt
+  mqttConnect();
 }
 
 void loop() 

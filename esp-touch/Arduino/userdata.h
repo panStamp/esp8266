@@ -29,21 +29,21 @@
  * Wifi settings
  * Enter here your SSID and password
  */
-const char* ssid     = "mySsid";
-const char* password = "myPassword";
+const char* ssid     = "Your_ssid";
+const char* password = "Your_password";
 /**
  * MQTT settings
  */
- IPAddress MQTT_BROKER(192, 168, 1, 12); // Enter here your broker URL
+ IPAddress MQTT_BROKER(192, 168, 1, 12); // MQTT broker IP address
 
 /*  
  *   #define mqtt_user "your_username"  
  *   #define mqtt_password "your_password"   
  */
 
-const int MQTT_PORT = 1883; 
-const char MQTT_TOPIC_MAIN[] = "/touchpanel";  // Main MQTT topic
-const char description[] = "panStamp Touch Panel 1"; // The description must be unique in the MQTT network
+const int MQTT_PORT = 1883; // MQTT broker port
+const char MQTT_TOPIC_MAIN[] = "mynetwork";  // Main MQTT topic
+const char description[] = "panStamp Tocuh Panel";
 const uint32_t sensorPeriodTH = 30000; // Transmit heartbeat every 30 sec
 
 #endif

@@ -29,26 +29,34 @@ uint32_t hBeatTime = 0;
 
 /**
  * MQTT connection
+ * 
  */
-#define mqtt_user "your_username"
-#define mqtt_password "your_password"
 
 #define MAX_MQTT_TOPIC_LENGTH  128   // Max topic length
 char MQTT_TOPIC_NETWORK[MAX_MQTT_TOPIC_LENGTH];
 char MQTT_TOPIC_CONTROL[MAX_MQTT_TOPIC_LENGTH];
 char MQTT_TOPIC_SYSTEM[MAX_MQTT_TOPIC_LENGTH];
 
-// MQTT client
+/*
+ * MQTT client
+ */
 PubSubClient client(espClient);
+
+/*
+ * Variables to turn the relays off and on. 
+ */ 
+const char valuesLow[][12] = {"0", "off", "Off", "OFF", "low", "Low", "LOW"}; 
+const char valuesHigh[][12]= {"1", "on", "On", "ON", "High", "high", "HIGH"};
+const char valuesToggle[][12] = {"TOGGLE", "toggle", "Toggle"}; 
 
 /**
  * Initialize MQTT topics
  */
 void initTopics(void)
 {
-  sprintf(MQTT_TOPIC_NETWORK, "%s/%s/network", MQTT_TOPIC_MAIN, deviceKey);
-  sprintf(MQTT_TOPIC_CONTROL, "%s/%s/control", MQTT_TOPIC_MAIN, deviceKey);
-  sprintf(MQTT_TOPIC_SYSTEM, "%s/%s/system", MQTT_TOPIC_MAIN, deviceKey);
+  sprintf(MQTT_TOPIC_NETWORK, "/%s/esp-output/%s/network", MQTT_TOPIC_MAIN, deviceKey);
+  sprintf(MQTT_TOPIC_CONTROL, "/%s/esp-output/%s/control", MQTT_TOPIC_MAIN, deviceKey);
+  sprintf(MQTT_TOPIC_SYSTEM, "/%s/esp-output/%s/system", MQTT_TOPIC_MAIN, deviceKey);
 }
 
 /**
@@ -76,12 +84,13 @@ void mqttReconnect()
     {
       Serial.println("connected");
 
-      client.publish(MQTT_TOPIC_SYSTEM, "CONNECTED");
-      
-      // Subscribe to the following topics
-      char topic[MAX_MQTT_TOPIC_LENGTH];
-      sprintf(topic, "%s/#", MQTT_TOPIC_CONTROL);
-      client.subscribe(topic);
+      client.publish(MQTT_TOPIC_SYSTEM, "CONNECTED"); 
+
+    // Subscribe to the following topics
+    char topic[MAX_MQTT_TOPIC_LENGTH*2];
+    sprintf(topic, "%s/#", MQTT_TOPIC_CONTROL);
+    client.subscribe(topic);
+
     }
     else
     {
@@ -105,8 +114,10 @@ void mqttReconnect()
 void mqttHandle(void)
 {
   if (!client.connected())
+  {
     mqttReconnect();
-  
+
+  }
   uint32_t currentTime = millis();
   if (currentTime - hBeatTime > hBeatPeriod)
   {
@@ -138,14 +149,56 @@ void mqttReceive(char* topic, byte* payload, unsigned int len)
       char *ptr = topic + strlen(MQTT_TOPIC_CONTROL) + 1;
       int outputNb = atoi(ptr);
 
-      // Read payload and drive output
-      if (!strncmp((char*)payload, "0", len))
-        driveOutput((uint8_t)outputNb, LOW);
-      else if (!strncmp((char*)payload, "1", len))
-        driveOutput((uint8_t)outputNb, HIGH);
+      if (!strncmp((char*)payload, "?", len))
+      {
+        mqttSendStatus( outputNb, outputState[outputNb]);
+      }
+      else
+      {       
+        // Check low values
+        for (uint8_t i = 0; i < (sizeof(valuesLow) / sizeof(valuesLow[0])); i++)
+        {      
+          if(!strncmp((char*)payload, valuesLow[i], len))
+          {
+            driveOutput((uint8_t)outputNb, LOW);
+            return;
+          }                          
+        } 
+        
+        // Check high values
+        for (uint8_t i = 0; i < (sizeof(valuesHigh) / sizeof(valuesHigh[0])); i++)
+        {             
+            if(!strncmp((char*)payload, valuesHigh[i], len))
+            {
+              driveOutput((uint8_t)outputNb, HIGH);
+              return;
+            }          
+        } 
+        
+        // Check toggle values
+        for (uint8_t i = 0; i < (sizeof(valuesToggle) / sizeof(valuesToggle[0])); i++)
+        { 
+          if(!strncmp((char*)payload, valuesToggle[i], len))
+          {   
+            if( outputState[outputNb] != 0 )
+              driveOutput((uint8_t)outputNb, LOW);
+            else  
+              driveOutput((uint8_t)outputNb, HIGH);  
+
+            return;
+          }
+        }         
+           
+      }
     }
-  }
+    else if (!strcmp(topic, MQTT_TOPIC_CONTROL ))
+    {
+      for (uint8_t i = 0; i < sizeof(binout); i++)
+        mqttSendStatus( i, outputState[i]);
+    }    
+  }  
 }
+
 
 /**
  * mqttSendStatus
@@ -164,4 +217,6 @@ void mqttSendStatus(uint8_t output, uint8_t state)
   // Publish current output values
   client.publish(tpc, msg);
 }
+
+
 

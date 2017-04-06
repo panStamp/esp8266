@@ -29,14 +29,14 @@
  * Wifi settings
  * Enter here your SSID and password
  */
-const char* ssid     = "Panstamp";
-const char* password = "machacalabarraca";
+const char* ssid     = "Your_ssid";
+const char* password = "Your_password";
 
 /**
  * MQTT settings
  */
-IPAddress MQTT_BROKER(192, 168, 1, 59);
-const int MQTT_PORT = 1883;
+IPAddress MQTT_BROKER(192, 168, 1, 12); // MQTT broker IP address
+const int MQTT_PORT = 1883;  // MQTT broker port
 const char MQTT_TOPIC_MAIN[] = "mynetwork";  // Main MQTT topic
 const char description[] = "panStamp 6-relay WiFi board";
 const uint32_t hBeatPeriod = 60000; // Transmit heartbeat every 60 sec
