@@ -26,8 +26,14 @@
 #include "Adafruit_MPR121.h"
 #include <ESP8266WiFi.h>
 #include <WiFiClient.h>
+#include <EEPROM.h>
 #include "userdata.h"
 #include "buzz.h"
+
+/**
+ * Debug option
+ */
+#define DEBUG_ENABLED  1
 
 #define LED 2
 BUZZ buzz(15);
@@ -36,8 +42,17 @@ Adafruit_MPR121 touch = Adafruit_MPR121();
 
 WiFiClient espClient;
 
+// If true, enter Wifi AP mode
+volatile bool enterApMode = false;
+bool  connectApMode = false;
 
-char deviceId[64];
+/**
+ * User config
+ */
+USERDATA config;
+
+char deviceId[256];
+
 // Unique device key based on MAC
 char deviceKey[WL_MAC_ADDR_LENGTH * 2 + 1]; 
 
@@ -59,13 +74,32 @@ unsigned long previousMillis = 0;
 unsigned long currentMillis = 0;
 
 
+
+/**
+ * enterWifiApMode
+ * 
+ * Enter WiFi AP mode
+ */
+void enterWifiApMode(void)
+{
+  enterApMode = true;
+}
+
 void setup() 
 {
   Serial.begin(38400);
   pinMode(LED, OUTPUT);
   digitalWrite(LED, HIGH);
 
+  // ESP8266 GPIO0 pin
+  pinMode(0, INPUT_PULLUP);
+  attachInterrupt(0, enterWifiApMode, FALLING);
+
+  // Initialize config (pseudo-EEPROM) space
+  config.begin();
+
   // Append last two bytes of the MAC to the device ID
+  //WiFi.begin();
   uint8_t mac[WL_MAC_ADDR_LENGTH];
   WiFi.softAPmacAddress(mac);
 
@@ -84,78 +118,132 @@ void setup()
   }
 
   // Set device ID
-  sprintf(deviceId, "%s %s", description, deviceKey);
+  sprintf(deviceId, "%s %s", apName, deviceKey);
   
   // Initialize MPR121 capacitive sensor
   if (!touch.begin(0x5A)) {
+    #ifdef DEBUG_ENABLED
     Serial.println("MPR121 not found, check wiring?");
+    #endif
+    
     while (1);
   }
+  #ifdef DEBUG_ENABLED
   Serial.println("MPR121 found!");
+  #endif
 
-  // We connect to wifi   
-  WiFi.begin(ssid, password); 
-  while (WiFi.status() != WL_CONNECTED) 
-  {  
-    delay(500);
-    Serial.print(".");
-    initWebServer();     
-  }
+  // Read config from EEPROM
+  if (config.readConfig())
+  {
+
+    // We connect to wifi   
+    WiFi.begin(config.ssid, config.password);
+
+    uint8_t attempts = 0;
+    while (WiFi.status() != WL_CONNECTED && !enterApMode) 
+    {  
+      delay(500);
+      Serial.print(".");
+      attempts++;
+
+      if(attempts == 20)
+        enterApMode = true;
+    }
+      if(!enterApMode)
+      {
+      #ifdef DEBUG_ENABLED
+      Serial.println("");
+      Serial.println(deviceId);
+      Serial.println("esp-touch Web Server");
+      Serial.print("Connected to ");
+      Serial.println(config.ssid);
+      Serial.print("IP address: ");
+      Serial.println(WiFi.localIP());
+      #endif  
+      
+      miHumidity();
+
+      // We connect mqtt
+      mqttConnect();
+
+      if(!enterApMode)
+      { 
+        connectApMode = false;
+         
+        //touch.setThresholds(15, 36);
+        initWebServer();
   
-  Serial.println("");
-  Serial.println(deviceId);
-  Serial.println("esp-touch Web Server");
-  Serial.print("Connected to ");
-  Serial.println(ssid);
-  Serial.print("IP address: ");
-  Serial.println(WiFi.localIP());
-
-  miHumidity();
-
-  // We connect mqtt
-  mqttConnect();
+        
+      }
+    }
+  }
+  else
+    enterApMode = true; 
+    
 }
 
 void loop() 
 {    
-  currentMillis = millis();  
-  mqttHandle();  
+   if (enterApMode)
+   {
+    enterApMode = false;
+    connectApMode = true; 
+    initWebServer();
+     
+    
+     WiFi.mode(WIFI_AP);  
+     WiFi.softAP(deviceId, apPassword);
 
-  if ((unsigned long)(currentMillis - previousMillis) >= sensorPeriodTH)
+     digitalWrite(LED, LOW);  
+     
+    #ifdef DEBUG_ENABLED
+    Serial.println("Entering AP mode");
+    #endif
+    
+  }
+  if(!connectApMode)
   {
-    temperature = getTemperature();
-    mqttPubTemp();
-    humidity =  getHumidity();
-    mqttPubHum();
-    previousMillis = currentMillis;
+    digitalWrite(LED, HIGH); 
+    currentMillis = millis();  
+  
+    if ((unsigned long)(currentMillis - previousMillis) >= atoi(config.sensorPeriodTH))
+    {
+      temperature = getTemperature();
+      mqttPubTemp();
+      humidity =  getHumidity();
+      mqttPubHum();
+      previousMillis = currentMillis;
+    }
+    
+    currTouched = touch.touched();
+    if (currTouched != oldTouched)
+    {
+      for (uint8_t i=0; i<12; i++) 
+      {        
+        if ((currTouched & _BV(i)) && !(oldTouched & _BV(i))) 
+        {
+          digitalWrite(LED, LOW);
+          buzz.play(i);
+          mqttPubButton(i, 1);
+          
+        }
+        if ((oldTouched & _BV(i)) && !(currTouched & _BV(i)))
+        {    
+          mqttPubButton(i, 0);
+        }
+      }
+      oldTouched = currTouched;
+    }
+    else if (currTouched == 0)
+    {
+      digitalWrite(LED, HIGH);  
+      buzz.stop();
+    }
+
+    mqttHandle();  
   }
   
-  currTouched = touch.touched();
-  if (currTouched != oldTouched)
-  {
-    for (uint8_t i=0; i<12; i++) 
-    {        
-      if ((currTouched & _BV(i)) && !(oldTouched & _BV(i))) 
-      {
-        digitalWrite(LED, LOW);
-        buzz.play(i);
-        mqttPubButton(i, 1);
-        
-      }
-      if ((oldTouched & _BV(i)) && !(currTouched & _BV(i)))
-      {    
-        mqttPubButton(i, 0);
-      }
-    }
-    oldTouched = currTouched;
-  }
-  else if (currTouched == 0)
-  {
-    digitalWrite(LED, HIGH);  
-    buzz.stop();
-  }
-
-  httpHandle();
+  httpHandle(); 
 }
 
 

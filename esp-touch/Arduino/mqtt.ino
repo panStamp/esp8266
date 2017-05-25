@@ -36,7 +36,9 @@ PubSubClient client(espClient);
  */
 void mqttConnect(void)
 {
-  client.setServer(MQTT_BROKER, MQTT_PORT);
+  int port = atoi(config.mqttPort);
+  
+  client.setServer(config.broker, port);
 }
 
 /*
@@ -46,19 +48,32 @@ void mqttConnect(void)
  */
 void mqttReconnect(void)
 {
-  while (!client.connected())
+  uint8_t attempts = 0; 
+  while (!client.connected() && !enterApMode)
   {
+    #ifdef DEBUG_ENABLED
     Serial.print("Attempting MQTT connection..."); // Attempt to connect
+    #endif
     if (client.connect(description)) // Anonymous connection to broker
     //if (client.connect("ESP8266Client", mqtt_user, mqtt_password)) // Authenticated connection with broker
-    {
+    { 
+      #ifdef DEBUG_ENABLED
       Serial.println("connected");
+      #endif
     }
     else
     {
+      #ifdef DEBUG_ENABLED
       Serial.print("failed, rc=");
       Serial.print(client.state());
       Serial.println(" try again in 5 seconds");
+      #endif
+
+      attempts++;
+      if(attempts == 5)
+        enterApMode = true;
+        
+      
       delay(5000); // Wait 5 seconds before retrying
     }
   }
@@ -113,7 +128,7 @@ void mqttPubButton( uint8_t numberButton, uint8_t touch)
   {
     strcpy(msg,"OFF");
   }
-  sprintf(tpc, "/%s/esp-touch/%s/button/%d", MQTT_TOPIC_MAIN, deviceKey, numberButton); 
+  sprintf(tpc, "/%s/esp-touch/%s/button/%d", config.topicMain, deviceKey, numberButton); 
   client.publish(tpc, msg);
 
 }
@@ -125,7 +140,7 @@ void mqttPubButton( uint8_t numberButton, uint8_t touch)
 void mqttPubTemp(void)
 {
   char tpc[64];
-  sprintf(tpc, "/%s/esp-touch/%s/temperature", MQTT_TOPIC_MAIN, deviceKey);
+  sprintf(tpc, "/%s/esp-touch/%s/temperature", config.topicMain, deviceKey);
   
   int n1 = int(temperature);
   int n2 = (temperature - n1) * 100;
@@ -143,7 +158,7 @@ void mqttPubTemp(void)
 void mqttPubHum(void)
 {
   char tpc[64];
-  sprintf(tpc, "/%s/esp-touch/%s/humidity", MQTT_TOPIC_MAIN, deviceKey);
+  sprintf(tpc, "/%s/esp-touch/%s/humidity", config.topicMain, deviceKey);
   
   int n1 = int(humidity);
   int n2 = (humidity - n1) * 100;

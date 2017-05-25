@@ -25,26 +25,147 @@
 #ifndef _USERDATA_H
 #define _USERDATA_H
 
-/**
- * Wifi settings
- * Enter here your SSID and password
- */
-const char* ssid     = "Your_ssid";
-const char* password = "Your_password";
-/**
- * MQTT settings
- */
- IPAddress MQTT_BROKER(192, 168, 1, 12); // MQTT broker IP address
+#include <EEPROM.h>
 
-/*  
- *   #define mqtt_user "your_username"  
- *   #define mqtt_password "your_password"   
- */
 
-const int MQTT_PORT = 1883; // MQTT broker port
-const char MQTT_TOPIC_MAIN[] = "mynetwork";  // Main MQTT topic
+#define MAX_BROKER_LENGTH  20
+#define MAX_PORT_LENGTH 6
+#define MAX_TOPIC_MAIN_LENGTH 64
+#define MAX_SENSOR_PERIOD_LENGTH 10
+
+/**
+ * Pseudo-EEPROM addresses
+ */
+#define EEPROM_MAX_PARAM_LENGTH  64
+#define EEPROM_WIFI_SSID  0
+#define EEPROM_WIFI_PWD      EEPROM_WIFI_SSID + EEPROM_MAX_PARAM_LENGTH
+#define EEPROM_MQTT_BROKER      EEPROM_WIFI_PWD + EEPROM_MAX_PARAM_LENGTH 
+#define EEPROM_MQTT_PORT      EEPROM_MQTT_BROKER + MAX_BROKER_LENGTH
+#define EEPROM_TOPIC_MAIN     EEPROM_MQTT_PORT  + MAX_PORT_LENGTH 
+#define EEPROM_SENSOR_PERIOD     EEPROM_TOPIC_MAIN + MAX_TOPIC_MAIN_LENGTH 
+
+
+/**
+ * Default WiFi Access Point settings
+ */
+const char apPassword[] = "panstamp";
+const char apName[] = "TouchPanel";
+
+
 const char description[] = "panStamp Tocuh Panel";
-const uint32_t sensorPeriodTH = 30000; // Transmit heartbeat every 30 sec
+
+
+/**
+ * Class: USERDATA
+ * 
+ * Description:
+ * USER config
+ */
+class USERDATA
+{
+  public:
+
+    /**
+     * Wifi settings
+     */
+    char ssid[EEPROM_MAX_PARAM_LENGTH];     // WiFi network SSID
+    char password[EEPROM_MAX_PARAM_LENGTH]; // WiFi password
+
+    /**
+     * Mqtt port, broker and topic
+     */
+    char mqttPort[MAX_PORT_LENGTH];      // MQTT PORT    
+    char broker[MAX_BROKER_LENGTH];    // MQTT BROKER       
+    char topicMain[MAX_TOPIC_MAIN_LENGTH];   // Topic
+
+    /**
+     * Sensor transmition period 
+     */
+    char sensorPeriodTH[MAX_SENSOR_PERIOD_LENGTH];  
+
+    /**
+     * begin
+     * 
+     * Initialize EEPROM
+     */
+    inline void begin(void)
+    {
+      // Config pseudo-EEPROM space
+      EEPROM.begin(512);
+    }
+    
+    /**
+     * readConfig
+     * 
+     * Read complete configuration settings from EEPROM
+     * 
+     * @return true if config found. Return false otherwise
+     */
+    inline bool readConfig(void)
+    {
+      if (readWifiConfig())
+      {
+        if (readMqttConfig())
+        {
+          if (readSensorPeriodConfig())
+            return true;
+        }
+      }
+
+      return false;
+    }
+    
+    /**
+     * readWifiCondif
+     *
+     * Read Wifi settings from EEPROM
+     * 
+     * @return true if config found. Return false otherwise
+     */
+    bool readWifiConfig(void);
+  
+    /**
+     * readMqttConfig
+     *
+     * Read Mqtt broker/port/topic settings from EEPROM
+     * 
+     * @return true if config found. Return false otherwise
+     */
+    bool readMqttConfig(void);
+
+
+    /**
+     * readSensorPeriodConfig
+     *
+     * Read sensor period from EEPROM
+     * 
+     * @return true if config found. Return false otherwise
+     */
+    bool readSensorPeriodConfig(void);
+
+    /**
+     * saveWifiConfig
+     *
+     * Save Wifi config in EEPROM
+     */
+    void saveWifiConfig(void);
+
+
+    /**
+     * saveMqttrConfig
+     *
+     * Save Mqtt config in EEPROM
+     */
+    void saveMqttConfig(void);
+
+    /**
+     * saveSensorPeriodConfig
+     *
+     * Save sensor period in EEPROM
+     */
+    void saveSensorPeriodConfig(void);
+};
+
 
 #endif
 
