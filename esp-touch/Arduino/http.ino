@@ -204,16 +204,6 @@ bool setSetting(void)
 }
 
 /*
- * httpHandle
- * 
- * We initialize
- */
-void miHumidity(void)
-{
-  myHumidity.begin();
-}
-
-/*
  * initWebServer
  * 
  * Handle HTTP requests

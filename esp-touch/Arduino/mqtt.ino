@@ -113,14 +113,14 @@ float getHumidity(void)
 }
 
 /*
- * mqttPubButton
+ * mqttPubStateButton
  * 
- * Publish Button via MQTT
+ * Publish Button ON or OFF via MQTT
  * 
  * @param button number
  * @param values 0-button not touched 1-button touched
  */
-void mqttPubButton( uint8_t numberButton, uint8_t touch)
+void mqttPubStateButton( uint8_t numberButton, uint8_t touch)
 {
   char tpc[64];
   char msg[4] = "ON";
@@ -128,10 +128,34 @@ void mqttPubButton( uint8_t numberButton, uint8_t touch)
   {
     strcpy(msg,"OFF");
   }
-  sprintf(tpc, "/%s/esp-touch/%s/button/%d", config.topicMain, deviceKey, numberButton); 
+
+  if (numberButton == 65 || numberButton== 66)
+    sprintf(tpc, "/%s/esp-touch/%s/button/%s", config.topicMain, deviceKey, String(char(numberButton)).c_str());
+  else
+    sprintf(tpc, "/%s/esp-touch/%s/button/%d", config.topicMain, deviceKey, numberButton);
+       
   client.publish(tpc, msg);
 
 }
+
+/*
+ * mqttPubPressedButton
+ * 
+ * Publish Button pressed via MQTT
+ * 
+ * @param button number
+ */
+void mqttPubPressedButton( uint8_t numberButton)
+{
+  char tpc[64];  
+  sprintf(tpc, "/%s/esp-touch/%s/keypad", config.topicMain, deviceKey);
+
+  if (numberButton == 65 || numberButton== 66) 
+    client.publish(tpc, String(char(numberButton)).c_str());        
+  else
+    client.publish(tpc, String(numberButton).c_str());  
+}
+
 /*
  * mqttPubTemp
  * 

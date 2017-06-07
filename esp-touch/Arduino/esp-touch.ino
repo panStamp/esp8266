@@ -33,7 +33,7 @@
 /**
  * Debug option
  */
-#define DEBUG_ENABLED  1
+//#define DEBUG_ENABLED  1
 
 #define LED 2
 BUZZ buzz(15);
@@ -87,7 +87,10 @@ void enterWifiApMode(void)
 
 void setup() 
 {
+  #ifdef DEBUG_ENABLED
   Serial.begin(38400);
+  #endif
+  
   pinMode(LED, OUTPUT);
   digitalWrite(LED, HIGH);
 
@@ -143,7 +146,9 @@ void setup()
     while (WiFi.status() != WL_CONNECTED && !enterApMode) 
     {  
       delay(500);
+      #ifdef DEBUG_ENABLED
       Serial.print(".");
+      #endif
       attempts++;
 
       if(attempts == 20)
@@ -159,9 +164,7 @@ void setup()
       Serial.println(config.ssid);
       Serial.print("IP address: ");
       Serial.println(WiFi.localIP());
-      #endif  
-      
-      miHumidity();
+      #endif        
 
       // We connect mqtt
       mqttConnect();
@@ -222,14 +225,17 @@ void loop()
       {        
         if ((currTouched & _BV(i)) && !(oldTouched & _BV(i))) 
         {
+          uint8_t KeyButton = keypadButton(i);
           digitalWrite(LED, LOW);
           buzz.play(i);
-          mqttPubButton(i, 1);
+          mqttPubPressedButton(KeyButton);
+          mqttPubStateButton(KeyButton, 1);        
           
         }
         if ((oldTouched & _BV(i)) && !(currTouched & _BV(i)))
-        {    
-          mqttPubButton(i, 0);
+        {  
+          uint8_t KeyButton = keypadButton(i);  
+          mqttPubStateButton(KeyButton, 0);
         }
       }
       oldTouched = currTouched;
@@ -244,6 +250,60 @@ void loop()
   }
   
   httpHandle(); 
+}
+
+/*
+ * keypadButton
+ * 
+ * Assign number in keypad
+ * 
+ * @param button number 
+ * 
+ * @return number keypad
+ */
+uint8_t keypadButton( uint8_t touchedButton)
+{
+  uint8_t button;
+  switch(touchedButton)
+  {
+    case 0:
+       button = 7;
+       break;
+    case 1:
+       button = 4;
+       break;
+    case 2:
+       button = 1;
+       break;
+    case 3:
+       button = 65;
+       break;
+    case 4:
+       button = 8;
+       break;
+    case 5:
+       button = 5;
+       break;
+    case 6:
+       button = 2;
+       break;
+    case 7:
+       button = 0;
+       break;
+    case 8:
+       button = 9;
+       break;
+    case 9:
+       button = 6;
+       break;
+    case 10:
+       button = 3;
+       break;
+    case 11:
+       button = 66;
+                                                                            
+  }
+  return button;
 }
 
 
