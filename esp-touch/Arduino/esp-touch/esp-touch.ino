@@ -33,7 +33,7 @@
 /**
  * Debug option
  */
-//#define DEBUG_ENABLED  1
+#define DEBUG_ENABLED  1
 
 #define LED 2
 BUZZ buzz(15);
@@ -109,6 +109,7 @@ void setup()
   char buf[3];
   // Set Device key from MAC address
   memset((uint8_t*)deviceKey, 0, sizeof(deviceKey));
+
   for(int i=0; i<WL_MAC_ADDR_LENGTH ; i++)
   {
     if (mac[i] < 0x10)
@@ -122,7 +123,7 @@ void setup()
 
   // Set device ID
   sprintf(deviceId, "%s %s", apName, deviceKey);
-  
+
   // Initialize MPR121 capacitive sensor
   if (!touch.begin(0x5A)) {
     #ifdef DEBUG_ENABLED
@@ -138,7 +139,6 @@ void setup()
   // Read config from EEPROM
   if (config.readConfig())
   {
-
     // We connect to wifi   
     WiFi.begin(config.ssid, config.password);
 
@@ -154,8 +154,9 @@ void setup()
       if(attempts == 20)
         enterApMode = true;
     }
-      if(!enterApMode)
-      {
+
+    if(!enterApMode)
+    {
       #ifdef DEBUG_ENABLED
       Serial.println("");
       Serial.println(deviceId);
@@ -173,43 +174,39 @@ void setup()
       { 
         connectApMode = false;
          
-        //touch.setThresholds(15, 36);
+        touch.setThresholds(15, 36);
         initWebServer();
-  
-        
       }
     }
   }
   else
-    enterApMode = true; 
-    
+    enterApMode = true;
 }
 
 void loop() 
-{    
-   if (enterApMode)
-   {
+{
+  if (enterApMode)
+  {
     enterApMode = false;
     connectApMode = true; 
     initWebServer();
-     
+         
+    WiFi.mode(WIFI_AP);  
+    WiFi.softAP(deviceId, apPassword);
     
-     WiFi.mode(WIFI_AP);  
-     WiFi.softAP(deviceId, apPassword);
-
-     digitalWrite(LED, LOW);  
+    digitalWrite(LED, LOW);  
      
     #ifdef DEBUG_ENABLED
     Serial.println("Entering AP mode");
-    #endif
-    
+    #endif    
   }
+  
   if(!connectApMode)
   {
     digitalWrite(LED, HIGH); 
     currentMillis = millis();  
   
-    if ((unsigned long)(currentMillis - previousMillis) >= atoi(config.sensorPeriodTH))
+    if ((unsigned long)(currentMillis - previousMillis) >= (atoi(config.txIntervalTH))*1000)
     {
       temperature = getTemperature();
       mqttPubTemp();
@@ -249,7 +246,7 @@ void loop()
     mqttHandle();  
   }
   
-  httpHandle(); 
+  httpHandle();
 }
 
 /*

@@ -74,14 +74,14 @@ class USERDATA
     /**
      * Mqtt port, broker and topic
      */
-    char mqttPort[MAX_PORT_LENGTH];      // MQTT PORT    
     char broker[MAX_BROKER_LENGTH];    // MQTT BROKER       
-    char topicMain[MAX_TOPIC_MAIN_LENGTH];   // Topic
+    char mqttPort[MAX_PORT_LENGTH];      // MQTT PORT    
+    char mainTopic[MAX_TOPIC_MAIN_LENGTH];   // Topic
 
     /**
      * Sensor transmition period 
      */
-    char sensorPeriodTH[MAX_SENSOR_PERIOD_LENGTH];  
+    char txIntervalTH[MAX_SENSOR_PERIOD_LENGTH];  
 
     /**
      * begin
@@ -107,7 +107,7 @@ class USERDATA
       {
         if (readMqttConfig())
         {
-          if (readSensorPeriodConfig())
+          if (readTxIntervalConfig())
             return true;
         }
       }
@@ -135,13 +135,13 @@ class USERDATA
 
 
     /**
-     * readSensorPeriodConfig
+     * readTxIntervalConfig
      *
      * Read sensor period from EEPROM
      * 
      * @return true if config found. Return false otherwise
      */
-    bool readSensorPeriodConfig(void);
+    bool readTxIntervalConfig(void);
 
     /**
      * saveWifiConfig
@@ -159,11 +159,11 @@ class USERDATA
     void saveMqttConfig(void);
 
     /**
-     * saveSensorPeriodConfig
+     * saveTxIntervalConfig
      *
      * Save sensor period in EEPROM
      */
-    void saveSensorPeriodConfig(void);
+    void saveTxIntervalConfig(void);
 };
 
 

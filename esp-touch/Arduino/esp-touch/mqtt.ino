@@ -52,8 +52,13 @@ void mqttReconnect(void)
   while (!client.connected() && !enterApMode)
   {
     #ifdef DEBUG_ENABLED
-    Serial.print("Attempting MQTT connection..."); // Attempt to connect
+    Serial.print("Attempting MQTT connection with broker "); // Attempt to connect
+    Serial.print(config.broker);
+    Serial.print(" (port ");
+    Serial.print(config.mqttPort);
+    Serial.print(")...");
     #endif
+    
     if (client.connect(description)) // Anonymous connection to broker
     //if (client.connect("ESP8266Client", mqtt_user, mqtt_password)) // Authenticated connection with broker
     { 
@@ -130,9 +135,9 @@ void mqttPubStateButton( uint8_t numberButton, uint8_t touch)
   }
 
   if (numberButton == 65 || numberButton== 66)
-    sprintf(tpc, "/%s/esp-touch/%s/button/%s", config.topicMain, deviceKey, String(char(numberButton)).c_str());
+    sprintf(tpc, "/%s/esp-touch/%s/button/%s", config.mainTopic, deviceKey, String(char(numberButton)).c_str());
   else
-    sprintf(tpc, "/%s/esp-touch/%s/button/%d", config.topicMain, deviceKey, numberButton);
+    sprintf(tpc, "/%s/esp-touch/%s/button/%d", config.mainTopic, deviceKey, numberButton);
        
   client.publish(tpc, msg);
 
@@ -148,7 +153,7 @@ void mqttPubStateButton( uint8_t numberButton, uint8_t touch)
 void mqttPubPressedButton( uint8_t numberButton)
 {
   char tpc[64];  
-  sprintf(tpc, "/%s/esp-touch/%s/keypad", config.topicMain, deviceKey);
+  sprintf(tpc, "/%s/esp-touch/%s/keypad", config.mainTopic, deviceKey);
 
   if (numberButton == 65 || numberButton== 66) 
     client.publish(tpc, String(char(numberButton)).c_str());        
@@ -164,7 +169,7 @@ void mqttPubPressedButton( uint8_t numberButton)
 void mqttPubTemp(void)
 {
   char tpc[64];
-  sprintf(tpc, "/%s/esp-touch/%s/temperature", config.topicMain, deviceKey);
+  sprintf(tpc, "/%s/esp-touch/%s/temperature", config.mainTopic, deviceKey);
   
   int n1 = int(temperature);
   int n2 = (temperature - n1) * 100;
@@ -182,7 +187,7 @@ void mqttPubTemp(void)
 void mqttPubHum(void)
 {
   char tpc[64];
-  sprintf(tpc, "/%s/esp-touch/%s/humidity", config.topicMain, deviceKey);
+  sprintf(tpc, "/%s/esp-touch/%s/humidity", config.mainTopic, deviceKey);
   
   int n1 = int(humidity);
   int n2 = (humidity - n1) * 100;

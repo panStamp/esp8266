@@ -106,8 +106,8 @@ bool USERDATA::readMqttConfig(void)
     // MQTT TOPIC
     for(int i=0 ; i<MAX_TOPIC_MAIN_LENGTH ; i++)
     {
-      topicMain[i] = EEPROM.read(EEPROM_TOPIC_MAIN + i);
-      if (topicMain[i] == 0)
+      mainTopic[i] = EEPROM.read(EEPROM_TOPIC_MAIN + i);
+      if (mainTopic[i] == 0)
       {
         found = true;
         break;
@@ -118,21 +118,21 @@ bool USERDATA::readMqttConfig(void)
 }
 
 /**
- * readSensorPeriodConfig
+ * readTxIntervalConfig
  *
  * Read sensor period from EEPROM
  * 
  * @return true if config found. Return false otherwise
  */
-bool USERDATA::readSensorPeriodConfig(void)
+bool USERDATA::readTxIntervalConfig(void)
 {
   bool found = false;
   
   // Sensor period temperature and humidity
   for(int i=0 ; i<MAX_SENSOR_PERIOD_LENGTH ; i++)
   {
-    sensorPeriodTH[i] = EEPROM.read(EEPROM_SENSOR_PERIOD + i);
-    if (sensorPeriodTH[i] == 0)
+    txIntervalTH[i] = EEPROM.read(EEPROM_SENSOR_PERIOD + i);
+    if (txIntervalTH[i] == 0)
     {
       found = true;
       break;
@@ -181,24 +181,24 @@ void USERDATA::saveMqttConfig(void)
     EEPROM.write(EEPROM_MQTT_PORT + i, mqttPort[i]);
   EEPROM.write(EEPROM_MQTT_PORT + i, 0);  
   
-  for(i=0 ; i<strlen(topicMain) ; i++)
-    EEPROM.write(EEPROM_TOPIC_MAIN + i, topicMain[i]);
+  for(i=0 ; i<strlen(mainTopic) ; i++)
+    EEPROM.write(EEPROM_TOPIC_MAIN + i, mainTopic[i]);
   EEPROM.write(EEPROM_TOPIC_MAIN + i, 0);
   
   EEPROM.commit();
 }
 
 /**
- * saveSensorPeriodConfig
+ * saveTxIntervalConfig
  *
  * Save sensor period in EEPROM
  */
-void USERDATA::saveSensorPeriodConfig(void)
+void USERDATA::saveTxIntervalConfig(void)
 {
   uint8_t i;
   
-  for(i=0 ; i<strlen(sensorPeriodTH) ; i++)
-    EEPROM.write(EEPROM_SENSOR_PERIOD + i, sensorPeriodTH[i]);
+  for(i=0 ; i<strlen(txIntervalTH) ; i++)
+    EEPROM.write(EEPROM_SENSOR_PERIOD + i, txIntervalTH[i]);
   EEPROM.write(EEPROM_SENSOR_PERIOD + i, 0);
 
   EEPROM.commit();
